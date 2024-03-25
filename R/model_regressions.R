@@ -19,59 +19,79 @@
 
 
 impact_regression <- function(outcomes, treatment_var, dataset, fixed_effect_var = NULL, cluster_var = NULL) {
-  # Initialize a data frame to store coefficients and confidence intervals
-  results_df <- data.frame(Treatment0 = numeric(), 
-                           Treatment1 = numeric(), 
-                           TreatmentLowerCI = numeric(), 
-                           TreatmentUpperCI = numeric(), 
-                           Outcome = character())
+  # Initialize a data frame to store results
+  results_df <- data.frame(Coefficient = numeric(), 
+                           LowerCI = numeric(), 
+                           UpperCI = numeric(), 
+                           Outcome = character(),
+                           Treatment = character())
   
   # Loop over all outcomes
   for(var in outcomes) {
-    # Create base formula
-    formula <- paste(var, "~", treatment_var)
+    # Create base formula for lm
+    base_formula <- paste(var, "~", treatment_var)
     
+    # Fit the base model using lm
+    base_model <- lm(as.formula(base_formula), data = dataset)
     
-    base_model  <- lm(formula, data = dataset)
-      
-      # Extract the intercept and treatment coefficient
-      intercept <- coef(base_model)["(Intercept)"]
-    treatment <- coef(base_model)[treatment_var]
+    # Extract coefficients for the base model
+    base_coefs <- coef(base_model)
+    n_coefs <- length(base_coefs) 
     
-    
-    
-    
-    # If there is a fixed effect variable, add it to the formula
+    # Create the formula for feols, potentially including fixed effects
+    fe_formula <- base_formula
     if (!is.null(fixed_effect_var)) {
-      formula <- paste(formula, "| ", fixed_effect_var)
+      fe_formula <- paste(fe_formula, "|", fixed_effect_var)
     }
     
-    # Fit the model using feols (from fixest package), accounting for fixed effects and clustering if specified
+    # Fit the model using feols, accounting for fixed effects and clustering if specified
     if (is.null(cluster_var)) {
-      fe_model <- feols(as.formula(formula), data = dataset)
+      fe_model <- feols(as.formula(fe_formula), data = dataset)
     } else {
-      fe_model <- feols(as.formula(formula), data = dataset, cluster = cluster_var)
+      fe_model <- feols(as.formula(fe_formula), data = dataset, cluster = cluster_var)
     }
     
-
     
-    # Compute confidence interval for treatment coefficient, taking into account clustering if specified
-    treatment_ci <- confint(fe_model, parm = treatment_var)
+    # Extract standard errors
+    std_errors <- summary(fe_model, robust = TRUE)$se
     
-    # Store in results data frame
+    
+    
+    # Critical value from the t-distribution for a 95% CI
+    # qt() gets the quantile function of the t distribution
+    # 0.975 for a 95% CI (two-tailed)
+    critical_value <- qnorm(0.975)
+    
+    # Calculate the confidence intervals
+    lower_ci <- base_coefs[2:n_coefs] - critical_value * std_errors
+    upper_ci <- base_coefs[2:n_coefs] + critical_value * std_errors
+    
+    comparison_coef <- base_coefs[1]
+    
     results_df <- rbind(results_df, 
-                        data.frame(Treatment0 = intercept,
-                                   Treatment1 = treatment,
-                                   TreatmentLowerCI = as.numeric(treatment_ci)[1], 
-                                   TreatmentUpperCI = as.numeric(treatment_ci)[2],
-                                   Outcome = var))
+                        data.frame(Coefficient = comparison_coef,
+                                   LowerCI =    NA, 
+                                   UpperCI =    NA,
+                                   Outcome = var,
+                                   Treatment = 0))
+    
+    
+    
+    for (coef in 1: (n_coefs - 1)) {
+      
+      
+      results_df <- rbind(results_df, 
+                          data.frame(Coefficient = base_coefs[coef + 1] + comparison_coef,
+                                     LowerCI =    lower_ci[coef]    + comparison_coef, 
+                                     UpperCI =    upper_ci[coef]    + comparison_coef,
+                                     Outcome = var,
+                                     Treatment = coef))
+    }
   }
   
+  rownames(results_df) <- NULL
   # Return the results data frame
   return(results_df)
 }
-
-
-
 
 
