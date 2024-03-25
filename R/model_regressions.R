@@ -18,7 +18,8 @@
 
 
 
-impact_regression <- function(outcomes, treatment_var, dataset, fixed_effect_var = NULL, cluster_var = NULL) {
+impact_regression <- function(outcomes, treatment_var, dataset, fixed_effect_var = NULL, cluster_var = NULL,
+                              level = 5) {
   # Initialize a data frame to store results
   results_df <- data.frame(Coefficient = numeric(), 
                            LowerCI = numeric(), 
@@ -60,7 +61,10 @@ impact_regression <- function(outcomes, treatment_var, dataset, fixed_effect_var
     # Critical value from the t-distribution for a 95% CI
     # qt() gets the quantile function of the t distribution
     # 0.975 for a 95% CI (two-tailed)
-    critical_value <- qnorm(0.975)
+    
+    ci_level = 1 - (level/200)
+    
+    critical_value <- qnorm(ci_level)
     
     # Calculate the confidence intervals
     lower_ci <- base_coefs[2:n_coefs] - critical_value * std_errors
