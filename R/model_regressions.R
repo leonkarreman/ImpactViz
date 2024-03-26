@@ -35,10 +35,7 @@ impact_regression <- function(outcomes, treatment_var, dataset, fixed_effect_var
     # Fit the base model using lm
     base_model <- lm(as.formula(base_formula), data = dataset)
     
-    # Extract coefficients for the base model
-    base_coefs <- coef(base_model)
-    n_coefs <- length(base_coefs) 
-    
+ 
     # Create the formula for feols, potentially including fixed effects
     fe_formula <- base_formula
     if (!is.null(fixed_effect_var)) {
@@ -51,6 +48,14 @@ impact_regression <- function(outcomes, treatment_var, dataset, fixed_effect_var
     } else {
       fe_model <- feols(as.formula(fe_formula), data = dataset, cluster = cluster_var)
     }
+    
+    
+    # Extract coefficients for the base model
+    base_coefs <- coef(base_model)
+    n_coefs <- length(base_coefs) 
+    
+    # Extract coefficients for the fixed effect model
+    fe_coefs <- coef(fe_model)
     
     
     # Extract standard errors
@@ -67,8 +72,8 @@ impact_regression <- function(outcomes, treatment_var, dataset, fixed_effect_var
     critical_value <- qnorm(ci_level)
     
     # Calculate the confidence intervals
-    lower_ci <- base_coefs[2:n_coefs] - critical_value * std_errors
-    upper_ci <- base_coefs[2:n_coefs] + critical_value * std_errors
+    lower_ci <- fe_coefs - critical_value * std_errors
+    upper_ci <- fe_coefs + critical_value * std_errors
     
     comparison_coef <- base_coefs[1]
     
@@ -85,11 +90,11 @@ impact_regression <- function(outcomes, treatment_var, dataset, fixed_effect_var
       
       
       results_df <- rbind(results_df, 
-                          data.frame(Coefficient = base_coefs[coef + 1] + comparison_coef,
-                                     LowerCI =    lower_ci[coef]    + comparison_coef, 
-                                     UpperCI =    upper_ci[coef]    + comparison_coef,
-                                     Outcome = var,
-                                     Treatment = coef))
+                          data.frame(Coefficient =  fe_coefs[coef] + comparison_coef,
+                                     LowerCI     =  lower_ci[coef]    + comparison_coef, 
+                                     UpperCI     =  upper_ci[coef]    + comparison_coef,
+                                     Outcome     = var,
+                                     Treatment   = coef))
     }
   }
   
