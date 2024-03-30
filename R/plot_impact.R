@@ -60,10 +60,13 @@ plot_impact <- function(
 
      } else {
        
+       
        results_long$Coefficient  = results_long$Coefficient * 100 
        results_long$UpperCI      = results_long$UpperCI * 100
        results_long$LowerCI      = results_long$LowerCI * 100
        results_long$blab = sprintf("%.0f%%", results_long$Coefficient)
+       
+       ylabels <- NULL
        
      } 
   
