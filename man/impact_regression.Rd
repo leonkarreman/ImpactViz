@@ -9,7 +9,8 @@ impact_regression(
   treatment_var,
   dataset,
   fixed_effect_var = NULL,
-  cluster_var = NULL
+  cluster_var = NULL,
+  level = 5
 )
 }
 \arguments{
