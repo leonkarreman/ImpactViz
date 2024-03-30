@@ -1,6 +1,8 @@
 #' Plot Results of Impact Analysis
 #'
 #' This function plots the results of an impact analysis using the ImpactViz package.
+#' @importFrom ggplot2 ggplot geom_bar geom_errorbar geom_text theme scale_fill_manual scale_y_continuous  scale_x_continuous
+#' @importFrom scales comma
 #' @param dataset Data frame containing the dataset.
 #' @param outcomes Character vector of outcome variable names.
 #' @param treatment_var The name of the treatment variable.
