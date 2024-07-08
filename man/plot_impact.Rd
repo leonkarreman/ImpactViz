@@ -10,12 +10,22 @@ plot_impact(
   treatment_var,
   fixed_effect_var = NULL,
   cluster_var = NULL,
+  control_vars = NULL,
   level = 5,
+  accuracy = NULL,
+  font = "Lato",
   colors = NULL,
   treatment_labs = NULL,
   subtitle = NULL,
   legend_title = NULL,
-  outcome_labs = NULL
+  outcome_labs = NULL,
+  outcome_pct = F,
+  errorbars = T,
+  buffer_adj = 20,
+  buffer_diff_adj = 0,
+  label_x_adj = 0,
+  y_expansion = c(0, 0.1),
+  y_breaks = waiver()
 )
 }
 \arguments{

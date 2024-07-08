@@ -10,6 +10,7 @@ impact_regression(
   dataset,
   fixed_effect_var = NULL,
   cluster_var = NULL,
+  control_vars = NULL,
   level = 5
 )
 }

@@ -32,20 +32,29 @@ plot_impact <- function(
                          treatment_var, 
                          fixed_effect_var = NULL, 
                          cluster_var      = NULL,
+                         control_vars    = NULL,
                          level            = 5, 
-                         
-                        
+                         accuracy        = NULL,
+                         font = "Lato",
                          colors         = NULL, 
                          treatment_labs = NULL, 
                          subtitle       = NULL, 
                          legend_title   = NULL,
-                         outcome_labs   = NULL) {
+                         outcome_labs   = NULL,
+                         outcome_pct  = F,
+                         errorbars    = T,
+                         buffer_adj = 20, 
+                         buffer_diff_adj = 0,
+                         label_x_adj = 0,
+                         y_expansion =  c(0, 0.1),
+                         y_breaks = waiver()) {
   
   # create result data 
-  results_long <- ImpactViz::impact_regression(dataset = dataset, 
+  results_long <- impact_regression(dataset = dataset, 
                                                outcomes =outcomes,
                                                 treatment_var = treatment_var,
                                                fixed_effect_var =fixed_effect_var,
+                                               control_vars = control_vars,
                                                cluster_var = cluster_var,
                                                level =level
                                         )
@@ -54,11 +63,11 @@ plot_impact <- function(
   
 
   
-  if(max(results_long$Coefficient) > 1)  { 
+  if(outcome_pct  == F)  { 
     
     
     ylabels <- scales::comma
-    results_long$blab = scales::comma(results_long$Coefficient)
+    results_long$blab = scales::comma(results_long$Coefficient, accuracy = accuracy)
 
      } else {
        
@@ -69,12 +78,13 @@ plot_impact <- function(
        results_long$blab = sprintf("%.0f%%", results_long$Coefficient)
        
        ylabels <- NULL
+  
        
      } 
   
   
 
-  
+  print(results_long)
   
   
   # Data manipulation
@@ -98,7 +108,25 @@ plot_impact <- function(
   }
   
   unique_treatments <- sort(unique(results_long$Treatment))
-  buffer = max(results_long$Coefficient)/20
+  
+  # create label positions with buffer
+  buffer = max(results_long$Coefficient)/buffer_adj
+  
+  results_long <- results_long %>% 
+    group_by(Outcome) %>% 
+    mutate(diff = Coefficient - Coefficient[Treatment == 0],
+           pct_diff = diff/Coefficient * 100,
+           max = max(pct_diff))
+  
+  results_long <- results_long %>% 
+                  mutate(coef_buffer = case_when(Coefficient > 0 ~ Coefficient + buffer,
+                                                 Coefficient < 0 ~ Coefficient - buffer),
+                         ci_buffer = case_when(UpperCI > 0 ~ UpperCI + buffer,
+                                               UpperCI < 0 ~ UpperCI - buffer),
+                         coef_buffer = case_when(max > 0  & Treatment != 0 ~ coef_buffer +  buffer_diff_adj,
+                                                 max == 0 & Treatment == 0 ~ coef_buffer +  buffer_diff_adj,
+                                                 TRUE           ~ coef_buffer))
+
 
   
   # If the order of unique_treatments is not 0, 1, 2, match colors accordingly
@@ -109,8 +137,10 @@ plot_impact <- function(
   # Assuming 'Type' is a factor, get colors for plotting
   plot_colors <- color_map[as.character(results_long$Treatment)]
   
-  
+  if (subtitle != "") {
   subtitle = paste(subtitle, "\n\n\n")
+  }
+  
   # Plotting
   p <- ggplot(data = results_long) +
     
@@ -122,29 +152,23 @@ plot_impact <- function(
                 stat = "identity", 
                 position = "identity", 
                 width = 1) +
-    
-    geom_errorbar(aes(x = X_position, 
-                      ymin = LowerCI, 
-                      ymax = UpperCI), width = 0.4) +
+
     
     geom_text(data = results_long[results_long$Treatment == 0,], 
-              aes(x = X_position, 
-                  y = Coefficient + buffer, 
+              aes(x = X_position + label_x_adj, 
+                  y = coef_buffer, 
                   label = blab), 
-              size = 10, family = "Lato") +
+              size = 10, family = font) +
     
-    geom_text( 
-              aes(x = X_position, 
-                  y = UpperCI + buffer, 
-                  label = blab), 
-              size = 10, family = "Lato") +
-    
+   
     scale_x_continuous(breaks = xbreaks,
                        labels = xlabs) +
     
-    scale_y_continuous(expand = expansion(mult = c(0, 0.1)),
+    scale_y_continuous(expand = expansion(mult = y_expansion),
                        position = "right",
-                       labels = ylabels) +
+                       labels = ylabels,
+                       breaks = y_breaks,
+                       ) +
     
     scale_fill_manual(values = plot_colors, 
                       name = legend_title,
@@ -154,23 +178,49 @@ plot_impact <- function(
          x = NULL, 
          y = "") +
     
+    
     theme_economist_white(gray_bg = FALSE, horizontal = TRUE) +
     
-    theme(axis.text.x = element_text(family = "Lato", size = 39, hjust = 0.2),
-          axis.title.x = element_text(family = "Lato", size = 39, hjust = 0),
-          axis.title.y = element_text(family = "Lato", size = 25),
-          plot.title = element_text(family = "Lato", size = 28, lineheight = 0.2),
-          plot.subtitle = element_text(family = "Lato", face = "bold", size = 41, hjust = 0, lineheight = 0.6),
-          legend.text = element_text(size = 41, family = "Lato"),
-          plot.caption = element_text(hjust = 0, family = "Lato", size = 21, color = "#808080"),
+    theme(axis.text.x = element_text(family = font, size = 39, hjust = 0.2),
+          axis.title.x = element_text(family = font, size = 39, hjust = 0),
+          axis.title.y = element_text(family = font, size = 25),
+          plot.title = element_text(family = font, size = 28, lineheight = 0.2),
+          plot.subtitle = element_text(family = font, face = "bold", size = 41, hjust = 0, lineheight = 0.6),
+          legend.text = element_text(size = 41, family = font),
+          plot.caption = element_text(hjust = 0, family = font, size = 21, color = "#808080"),
           legend.position = c(0.48, 1.12),
-          legend.title = element_text(family = "Lato", size = 41, hjust = 0),
+          legend.title = element_text(family = font, size = 41, hjust = 0),
           legend.direction = "horizontal",
-          axis.text.y = element_text(family = "Lato", size = 23),
+          axis.text.y = element_text(family = font, size = 23),
           axis.line = element_blank(),
           axis.ticks.x = element_blank(),
           axis.line.y.right = element_blank(),
           axis.line.x.bottom = element_line())
+  
+      
+  if (errorbars == T) {
+    
+    p <- p + geom_errorbar(aes(x = X_position, 
+                    ymin = LowerCI, 
+                    ymax = UpperCI), width = 0.4) +  geom_text( 
+                      aes(x = X_position, 
+                          y =  ci_buffer, 
+                          label = blab), 
+                      size = 10, family = font) 
+      
+    
+  } else{
+    
+    p <- p + geom_text(data = results_long[results_long$Treatment != 0,],
+      aes(x = X_position, 
+          y =  coef_buffer, 
+          label = blab), 
+      size = 10, family = font) 
+  }
+  
+      
+      
+  
   
   return(p)
   
@@ -178,3 +228,4 @@ plot_impact <- function(
 
 # Example usage:
 # plot_results(results_df)
+

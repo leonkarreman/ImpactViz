@@ -19,7 +19,8 @@
 
 
 impact_regression <- function(outcomes, treatment_var, dataset, fixed_effect_var = NULL, cluster_var = NULL,
-                              level = 5) {
+                              control_vars = NULL,
+                              level = 5 ) {
   # Initialize a data frame to store results
   results_df <- data.frame(Coefficient = numeric(), 
                            LowerCI = numeric(), 
@@ -39,7 +40,7 @@ impact_regression <- function(outcomes, treatment_var, dataset, fixed_effect_var
     # Create the formula for feols, potentially including fixed effects
     fe_formula <- base_formula
     if (!is.null(fixed_effect_var)) {
-      fe_formula <- paste(fe_formula, "|", fixed_effect_var)
+      fe_formula <- paste(fe_formula,  control_vars, "|", fixed_effect_var)
     }
     
     # Fit the model using feols, accounting for fixed effects and clustering if specified
@@ -49,13 +50,16 @@ impact_regression <- function(outcomes, treatment_var, dataset, fixed_effect_var
       fe_model <- feols(as.formula(fe_formula), data = dataset, cluster = cluster_var)
     }
     
-    
+    print(summary(fe_model))
     # Extract coefficients for the base model
     base_coefs <- coef(base_model)
-    n_coefs <- length(base_coefs) 
+
     
     # Extract coefficients for the fixed effect model
-    fe_coefs <- coef(fe_model)
+    fe_coefs_all <- coef(fe_model)
+    indices <- grep(treatment_var, names(fe_coefs_all))
+    fe_coefs <- fe_coefs_all[indices]
+    n_coefs <- length(fe_coefs) 
     
     
     # Extract standard errors
@@ -86,7 +90,7 @@ impact_regression <- function(outcomes, treatment_var, dataset, fixed_effect_var
     
     
     
-    for (coef in 1: (n_coefs - 1)) {
+    for (coef in 1: (n_coefs)) {
       
       
       results_df <- rbind(results_df, 
@@ -102,5 +106,8 @@ impact_regression <- function(outcomes, treatment_var, dataset, fixed_effect_var
   # Return the results data frame
   return(results_df)
 }
+
+
+
 
 
