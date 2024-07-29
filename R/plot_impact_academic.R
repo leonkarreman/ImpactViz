@@ -216,7 +216,8 @@ plot_impact_academic <- function(
                    linejoin="bevel",
                    size = 1) +
 
-      geom_text(results_long[2:nrow(results_long),], size = 10, mapping = aes(x = x_label, y = y_label, label = diff))
+      geom_text(results_long[2:nrow(results_long),], size = 10, family = font,
+                mapping = aes(x = x_label, y = y_label, label = diff))
 
 
 
