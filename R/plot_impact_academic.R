@@ -214,10 +214,7 @@ plot_impact_academic <- function(
       geom_segment(results_long[2:nrow(results_long), ], mapping = aes(x = x,
                                                        xend = X_position,y = y, yend = y), lineend = "round",
                    linejoin="bevel",
-                   size = 1) +
-
-      geom_text(results_long[2:nrow(results_long),], size = 10, family = font,
-                mapping = aes(x = x_label, y = y_label, label = diff))
+                   size = 1)
 
 
 
