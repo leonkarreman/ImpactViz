@@ -192,7 +192,7 @@ plot_impact_academic <- function(
           plot.caption = element_text(hjust = 0, family = font, size = 21, color = "#808080"),
           legend.position = c(0.48, 1.12),
           legend.title = element_text(family = font, size = 41, hjust = 0),
-          legend.direction = "horizontal",
+          legend.direction = "vertical",
           axis.text.y = element_text(family = font, size = 23),
           axis.line = element_blank(),
           axis.ticks.x = element_blank(),
@@ -214,10 +214,10 @@ plot_impact_academic <- function(
       geom_segment(results_long[2:nrow(results_long), ], mapping = aes(x = x,
                                                        xend = X_position,y = y, yend = y), lineend = "round",
                    linejoin="bevel",
-                   size = 1)
-
-
-
+                   size = 1) +   geom_text(results_long[2:nrow(results_long),],
+                                           size = 10,
+                                           font = font,
+                                           mapping = aes(x = x_label, y = y_label, label = diff))
 
 
 
