@@ -133,7 +133,7 @@ plot_impact_academic <- function(
          x_label = (x + X_position)/2,
          y_label = y * 1.05,
          diff= round(diff, 2),
-
+         diff = scales::comma(diff, accuracy= accuracy),
          diff = as.character(diff),
          diff = case_when(Pval < 0.01 ~ paste(diff,  "***", sep = ""),
                           Pval < 0.05 ~ paste(diff,  "**", sep = ""),
