@@ -231,6 +231,3 @@ plot_impact_academic <- function(
 
 }
 
-# Example usage:
-# plot_results(results_df)
-
