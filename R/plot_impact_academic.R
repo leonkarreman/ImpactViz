@@ -128,9 +128,6 @@ plot_impact_academic <- function(
   # Assuming 'Type' is a factor, get colors for plotting
   #plot_colors <- color_map[as.character(results_long$Treatment)]
 
-  if (subtitle != "") {
-    subtitle = paste(subtitle, "\n")
-  }
 
 
 pairs$id  <- 1:nrow(pairs)
@@ -207,7 +204,7 @@ pairs$id  <- 1:nrow(pairs)
           legend.position = c(0.48, 1.12),
           legend.title = element_text(family = font, size = 41, hjust = 0),
           legend.direction = "vertical",
-          axis.text.y = element_text(family = font, size = 23),
+          axis.text.y = element_text(family = font, size = 28),
           axis.line = element_blank(),
           axis.ticks.x = element_blank(),
           axis.ticks.y = element_line(),
