@@ -36,6 +36,8 @@ plot_impact_academic <- function(
     subtitle       = NULL,
     legend_title   = NULL,
     outcome_labs   = NULL,
+    label_adjust = 0.5,
+    label_size = 39,
     outcome_pct  = F,
     buffer_adj = 20,
     buffer_diff_adj = 0,
@@ -131,13 +133,17 @@ plot_impact_academic <- function(
   }
 
 
+pairs$id  <- 1:nrow(pairs)
+
+
  pairs <- merge(pairs, results_long[, c("Treatment", "X_position")], by.x = "Coefficient1", by.y= "Treatment", all.x = T)
 
 
  pairs <- merge(pairs, results_long[, c("Treatment", "X_position")], by.x = "Coefficient2", by.y= "Treatment", all.x = T)
 
+ pairs <- pairs[order(pairs$id), ]
 
- pairs <- pairs %>% mutate(y_increment = seq(0.2*max(results_long$Coefficient), by = 0.2*max(results_long$Coefficient) ,length.out = nrow(pairs)),
+ pairs <- pairs %>% mutate(y_increment = seq(0.15*max(results_long$Coefficient), by = 0.15*max(results_long$Coefficient) ,length.out = nrow(pairs)),
                            y = max(results_long$Coefficient),
                            y = y + y_increment,
                            x_label = (X_position.x + X_position.y)/2,
@@ -191,7 +197,7 @@ plot_impact_academic <- function(
 
     theme_economist_white(gray_bg = FALSE, horizontal = TRUE) +
 
-    theme(axis.text.x = element_text(family = font, size = 39, hjust = 0.5),
+    theme(axis.text.x = element_text(family = font, size = label_size, hjust = label_adjust),
           axis.title.x = element_text(family = font, size = 39, hjust = 0),
           axis.title.y = element_text(family = font, size = 25),
           plot.title = element_text(family = font, size = 28, lineheight = 0.2),

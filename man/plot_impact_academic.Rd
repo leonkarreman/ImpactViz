@@ -14,6 +14,8 @@ plot_impact_academic(
   subtitle = NULL,
   legend_title = NULL,
   outcome_labs = NULL,
+  label_adjust = 0.5,
+  label_size = 39,
   outcome_pct = F,
   buffer_adj = 20,
   buffer_diff_adj = 0,
