@@ -6,9 +6,10 @@
 \usage{
 plot_impact_academic(
   dataset,
+  pair_data,
   accuracy = NULL,
   font = "Lato",
-  colors = NULL,
+  color = "blue",
   treatment_labs = NULL,
   subtitle = NULL,
   legend_title = NULL,
@@ -24,7 +25,7 @@ plot_impact_academic(
 \arguments{
 \item{dataset}{Data frame containing the dataset.}
 
-\item{colors}{Character vector of colors for treatment groups.}
+\item{color}{bar color}
 
 \item{treatment_labs}{Character vector of labels for treatment groups.}
 

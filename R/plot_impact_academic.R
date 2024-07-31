@@ -9,7 +9,7 @@
 #' @param fixed_effect_var The name of the fixed effect variable (optional).
 #' @param cluster_var The name of the cluster variable (optional).
 #' @param level The level for confidence intervals.
-#' @param colors Character vector of colors for treatment groups.
+#' @param color bar color
 #' @param treatment_labs Character vector of labels for treatment groups.
 #' @param subtitle The subtitle for the plot.
 #' @param legend_title The title for the legend.
@@ -28,9 +28,10 @@
 # Define the plotting function
 plot_impact_academic <- function(
     dataset,
+    pair_data,
     accuracy        = NULL,
     font = "Lato",
-    colors         = NULL,
+    color        = "blue",
     treatment_labs = NULL,
     subtitle       = NULL,
     legend_title   = NULL,
@@ -68,6 +69,7 @@ plot_impact_academic <- function(
   }
 
 
+  y_breaks <- pretty(c(0, max(results_long$Coefficient)) , n = 4)
 
   print(results_long)
 
@@ -118,28 +120,36 @@ plot_impact_academic <- function(
 
   # If the order of unique_treatments is not 0, 1, 2, match colors accordingly
   # For a dynamic approach, especially when treatment arms are not known in advance or are non-numeric:
-  color_map <- setNames(colors, unique_treatments) # Creates a named vector
+  #color_map <- setNames(colors, unique_treatments) # Creates a named vector
 
   # Example usage:
   # Assuming 'Type' is a factor, get colors for plotting
-  plot_colors <- color_map[as.character(results_long$Treatment)]
+  #plot_colors <- color_map[as.character(results_long$Treatment)]
 
   if (subtitle != "") {
-    subtitle = paste(subtitle, "\n\n\n")
+    subtitle = paste(subtitle, "\n")
   }
 
- results_long <- results_long %>% mutate(y_increment = seq(0, by = 0.2*max(results_long$Coefficient) ,length.out = nrow(results_long)),
-         y = y + y_increment,
-         x_label = (x + X_position)/2,
-         y_label = y * 1.05,
-         diff= round(diff, 2),
-         diff = scales::comma(diff, accuracy= accuracy),
-         diff = as.character(diff),
-         diff = case_when(Pval < 0.01 ~ paste(diff,  "***", sep = ""),
-                          Pval < 0.05 ~ paste(diff,  "**", sep = ""),
-                          Pval < 0.10 ~ paste(diff,  "*", sep = ""),
-                          TRUE        ~ diff
-         ))
+
+ pairs <- merge(pairs, results_long[, c("Treatment", "X_position")], by.x = "Coefficient1", by.y= "Treatment", all.x = T)
+
+
+ pairs <- merge(pairs, results_long[, c("Treatment", "X_position")], by.x = "Coefficient2", by.y= "Treatment", all.x = T)
+
+
+ pairs <- pairs %>% mutate(y_increment = seq(0.2*max(results_long$Coefficient), by = 0.2*max(results_long$Coefficient) ,length.out = nrow(pairs)),
+                           y = max(results_long$Coefficient),
+                           y = y + y_increment,
+                           x_label = (X_position.x + X_position.y)/2,
+                           y_label = y * 1.05,
+                           diff= round(Diff, 2),
+                           diff = scales::comma(diff),
+                           diff = as.character(diff),
+                           diff = case_when(Pval < 0.01 ~ paste(diff,  "***", sep = ""),
+                                            Pval < 0.05 ~ paste(diff,  "**", sep = ""),
+                                            Pval < 0.10 ~ paste(diff,  "*", sep = ""),
+                                            TRUE        ~ diff
+                           ))
 
 
 
@@ -148,9 +158,11 @@ plot_impact_academic <- function(
 
 
     geom_bar(aes(x = X_position,
-                 y = Coefficient,
-                 fill = Treatment),
-             alpha = 1,
+                 y = Coefficient),
+
+             color = color,
+             alpha = 0.6,
+             fill = color,
              stat = "identity",
              position = "identity",
              width = 1) +
@@ -163,18 +175,14 @@ plot_impact_academic <- function(
               size = 10, family = font) +
 
 
-    scale_x_continuous(breaks = xbreaks,
-                       labels = xlabs) +
+    scale_x_continuous(breaks = results_long$X_position,
+                       labels = treatment_labs) +
 
     scale_y_continuous(expand = expansion(mult = y_expansion),
                        position = "right",
                        labels = ylabels,
                        breaks = y_breaks
     ) +
-
-    scale_fill_manual(values = plot_colors,
-                      name = legend_title,
-                      labels = treatment_labs) +
 
     labs(subtitle = subtitle,
          x = NULL,
@@ -183,7 +191,7 @@ plot_impact_academic <- function(
 
     theme_economist_white(gray_bg = FALSE, horizontal = TRUE) +
 
-    theme(axis.text.x = element_text(family = font, size = 39, hjust = 0.2),
+    theme(axis.text.x = element_text(family = font, size = 39, hjust = 0.5),
           axis.title.x = element_text(family = font, size = 39, hjust = 0),
           axis.title.y = element_text(family = font, size = 25),
           plot.title = element_text(family = font, size = 28, lineheight = 0.2),
@@ -197,7 +205,7 @@ plot_impact_academic <- function(
           axis.line = element_blank(),
           axis.ticks.x = element_blank(),
           axis.ticks.y = element_line(),
-          axis.line.y.right = element_line(),
+          axis.line.y.right = element_blank(),
           axis.line.x.bottom = element_line(),
           panel.grid.major.y = element_blank(),
 
@@ -205,25 +213,20 @@ plot_impact_academic <- function(
 
 
 
-
     p <- p + geom_text(data = results_long[results_long$Treatment != 0,],
                        aes(x = X_position,
                            y =  coef_buffer,
                            label = blab),
-                       size = 10, family = font) + theme(panel.background = element_rect(fill = "white")) +
-      geom_segment(results_long[2:nrow(results_long), ], mapping = aes(x = x,
-                                                       xend = X_position,y = y, yend = y), lineend = "round",
-                   linejoin="bevel",
-                   size = 1) +
+                       size = 10, family = font) +  geom_segment(pairs, mapping = aes(x = X_position.x,
+                                               xend = X_position.y,
+                                               y = y, yend = y), lineend = "round",
+                          linejoin="bevel",
+                          size = 1) + geom_segment(pairs, mapping = aes(x = X_position.x, xend = X_position.x, y = y, yend = y - (max(y) * 0.05)), size = 1) +
+      geom_segment(pairs, mapping = aes(x = X_position.y, xend = X_position.y, y = y, yend = y - (max(y) * 0.05)), size = 1) +
 
-            geom_segment(results_long[2:nrow(results_long), ], mapping = aes(x = x, xend = x, y =y, yend = y - (max(results_long$y) * 0.05)), size = 1) +
-
-      geom_segment(results_long[2:nrow(results_long), ], mapping = aes(x = X_position, xend = X_position, y =y, yend = y - (max(results_long$y) * 0.05)), size = 1)+
-
-              geom_text(results_long[2:nrow(results_long),],
-                                           size = 10,
-                                           family = font,
-                                           mapping = aes(x = x_label, y = y_label, label = diff))
+      geom_text(pairs,
+                size = 10, family= font,
+                mapping = aes(x = x_label, y = y_label, label = diff))
 
 
 
