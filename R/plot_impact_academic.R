@@ -146,8 +146,9 @@ pairs$id  <- 1:nrow(pairs)
                            x_label = (X_position.x + X_position.y)/2,
                            y_label = y * 1.05,
                            diff= round(Diff, 2),
-                           diff = scales::comma(diff),
-                           diff = as.character(diff),
+                           diff = case_when(diff > 1000 ~ scales::comma(diff),
+                                            TRUE ~ as.character(diff)),
+
                            diff = case_when(Pval < 0.01 ~ paste(diff,  "***", sep = ""),
                                             Pval < 0.05 ~ paste(diff,  "**", sep = ""),
                                             Pval < 0.10 ~ paste(diff,  "*", sep = ""),
