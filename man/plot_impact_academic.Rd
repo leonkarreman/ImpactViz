@@ -7,7 +7,7 @@
 plot_impact_academic(
   dataset,
   pair_data,
-  accuracy = NULL,
+  accuracy = 2,
   font = "Lato",
   color = "blue",
   treatment_labs = NULL,

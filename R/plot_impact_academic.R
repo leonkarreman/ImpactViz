@@ -29,7 +29,7 @@
 plot_impact_academic <- function(
     dataset,
     pair_data,
-    accuracy        = NULL,
+    accuracy        = 2,
     font = "Lato",
     color        = "blue",
     treatment_labs = NULL,
@@ -57,7 +57,15 @@ plot_impact_academic <- function(
 
 
     ylabels <- scales::comma
-    results_long$blab = scales::comma(results_long$Coefficient, accuracy = accuracy)
+
+    results_long$blab = round(results_long$Coefficient, accuracy)
+
+    if (max(results_long$Coefficient) > 1000) {
+
+
+    results_long$blab = scales::comma(results_long$Coefficient)
+
+    }
 
   } else {
 
@@ -145,7 +153,7 @@ pairs$id  <- 1:nrow(pairs)
                            y = y + y_increment,
                            x_label = (X_position.x + X_position.y)/2,
                            y_label = y * 1.05,
-                           diff= round(Diff, 2),
+                           diff= round(Diff, accuracy),
                            diff = case_when(diff > 1000 ~ scales::comma(diff),
                                             TRUE ~ as.character(diff)),
 
