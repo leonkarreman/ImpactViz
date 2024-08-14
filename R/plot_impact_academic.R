@@ -25,10 +25,12 @@
 #'              subtitle = "Your Subtitle",
 #'              legend_title = "Treatment Group")
 
+#--------------------------------
 # Define the plotting function
+# --------------------------------
 plot_impact_academic <- function(
     dataset,
-    pair_data,
+    pair_data = NULL,
     accuracy        = 2,
     font = "Lato",
     color        = "blue",
@@ -39,17 +41,21 @@ plot_impact_academic <- function(
     label_adjust = 0.5,
     label_size = 39,
     outcome_pct  = F,
-    buffer_adj = 20,
+    buffer_adj = 1,
     buffer_diff_adj = 0,
     label_x_adj = 0,
-    y_expansion =  c(0, 0.1),
     y_breaks = waiver()) {
 
-  # create result data
+
+
+  #--------------------------------
+  # Some label creation
+  # --------------------------------
+
+  #rename dataset
   results_long <- dataset
 
-  xlabs <- NULL
-  xbreaks <- NULL
+  # get unique outcomes
   outcomes = unique(results_long$Outcome)
 
 
@@ -60,7 +66,7 @@ plot_impact_academic <- function(
 
     results_long$blab = round(results_long$Coefficient, accuracy)
 
-    if (max(results_long$Coefficient) > 1000) {
+    if (max(results_long$Coefficient, na.rm = T) > 1000) {
 
 
     results_long$blab = scales::comma(results_long$Coefficient)
@@ -78,11 +84,37 @@ plot_impact_academic <- function(
 
   }
 
+  min_coef= min(results_long$Coefficient)
 
+  if (0 %in% results_long$Coefficient) {
+
+    results_long <- results_long %>%
+                    mutate(blab = as.character(blab),
+                      blab = case_when(Pval < 0.01 ~ paste(blab,  "***", sep = ""),
+                                     Pval < 0.05 ~ paste(blab,  "**", sep = ""),
+                                     Pval < 0.10 ~ paste(blab,  "*", sep = ""),
+                                     TRUE        ~ blab
+                    ))
+  }
+
+
+
+if (min_coef < 0) {
+  y_breaks <- pretty(c(0, min(results_long$Coefficient)) , n = 4)
+  y_expansion =  c(0.1, 0.1)
+
+}
+
+else{
   y_breaks <- pretty(c(0, max(results_long$Coefficient)) , n = 4)
+  y_expansion =  c(0, 0.1)
+}
 
-  print(results_long)
 
+
+  #--------------------------------
+  # Main Outcome Dataset
+  # --------------------------------
 
   # Data manipulation
   results_long <- results_long %>%
@@ -96,18 +128,7 @@ plot_impact_academic <- function(
            X_position = 1 + Outcome_Pos + IntraOutcome_Pos) %>%
     ungroup()
 
-  if(length(outcomes) > 1) {
 
-    xlabs <- outcome_labs
-
-    xbreaks <- as.numeric(unlist(results_long[results_long$Treatment == 0, "X_position"]))
-
-  }
-
-  unique_treatments <- sort(unique(results_long$Treatment))
-
-  # create label positions with buffer
-  buffer = max(results_long$Coefficient)/buffer_adj
 
 
   results_long$x = min(results_long$X_position)
@@ -117,53 +138,27 @@ plot_impact_academic <- function(
     group_by(Outcome) %>%
     mutate(diff = Coefficient - Coefficient[Treatment == 0],
            pct_diff = diff/Coefficient * 100,
-           max = max(pct_diff))
+           max = max(pct_diff)) %>%
+       filter(Coefficient != 0)
+
 
   results_long <- results_long %>%
-    mutate(coef_buffer = case_when(Coefficient > 0 ~ Coefficient + buffer,
-                                   Coefficient < 0 ~ Coefficient - buffer),
-           coef_buffer = case_when(max > 0  & Treatment != 0 ~ coef_buffer +  buffer_diff_adj,
-                                   max == 0 & Treatment == 0 ~ coef_buffer +  buffer_diff_adj,
-                                   TRUE           ~ coef_buffer))
+    mutate(buffer = Coefficient * .05,
+           buffer = min(buffer),
+           coef_buffer = Coefficient + buffer)
 
+     print(results_long)
 
+           # coef_buffer = case_when(max > 0  & Treatment != 0 ~ coef_buffer +  buffer_diff_adj,
+           #                         max == 0 & Treatment == 0 ~ coef_buffer +  buffer_diff_adj,
+           #                         TRUE           ~ coef_buffer))
 
-  # If the order of unique_treatments is not 0, 1, 2, match colors accordingly
-  # For a dynamic approach, especially when treatment arms are not known in advance or are non-numeric:
-  #color_map <- setNames(colors, unique_treatments) # Creates a named vector
+     # case_when(Coefficient > 0 ~ Coefficient + buffer,
+     #           Coefficient < 0 ~ Coefficient - buffer)
 
-  # Example usage:
-  # Assuming 'Type' is a factor, get colors for plotting
-  #plot_colors <- color_map[as.character(results_long$Treatment)]
-
-
-
-pairs$id  <- 1:nrow(pairs)
-
-
- pairs <- merge(pairs, results_long[, c("Treatment", "X_position")], by.x = "Coefficient1", by.y= "Treatment", all.x = T)
-
-
- pairs <- merge(pairs, results_long[, c("Treatment", "X_position")], by.x = "Coefficient2", by.y= "Treatment", all.x = T)
-
- pairs <- pairs[order(pairs$id), ]
-
- pairs <- pairs %>% mutate(y_increment = seq(0.15*max(results_long$Coefficient), by = 0.15*max(results_long$Coefficient) ,length.out = nrow(pairs)),
-                           y = max(results_long$Coefficient),
-                           y = y + y_increment,
-                           x_label = (X_position.x + X_position.y)/2,
-                           y_label = y * 1.05,
-                           diff= round(Diff, accuracy),
-                           diff = case_when(diff > 1000 ~ scales::comma(diff),
-                                            TRUE ~ as.character(diff)),
-
-                           diff = case_when(Pval < 0.01 ~ paste(diff,  "***", sep = ""),
-                                            Pval < 0.05 ~ paste(diff,  "**", sep = ""),
-                                            Pval < 0.10 ~ paste(diff,  "*", sep = ""),
-                                            TRUE        ~ diff
-                           ))
-
-
+  #--------------------------------
+  # Create Plot
+  # --------------------------------
 
   # Plotting
   p <- ggplot(data = results_long) +
@@ -180,7 +175,7 @@ pairs$id  <- 1:nrow(pairs)
              width = 1) +
 
 
-    geom_text(data = results_long[results_long$Treatment == 0,],
+    geom_text(data = results_long,
               aes(x = X_position + label_x_adj,
                   y = coef_buffer,
                   label = blab),
@@ -221,15 +216,47 @@ pairs$id  <- 1:nrow(pairs)
           axis.line.x.bottom = element_line(),
           panel.grid.major.y = element_blank(),
 
-          )
+    )
+
+  #--------------------------------
+  # Pairs-level data
+  # --------------------------------
+
+if (!is.null(pair_data)) {
+
+ pairs$id  <- 1:nrow(pairs)
+
+
+ pairs <- merge(pairs, results_long[, c("Treatment", "X_position")], by.x = "Coefficient1", by.y= "Treatment", all.x = T)
+
+
+ pairs <- merge(pairs, results_long[, c("Treatment", "X_position")], by.x = "Coefficient2", by.y= "Treatment", all.x = T)
+
+ pairs <- pairs[order(pairs$id), ]
+
+ pairs <- pairs %>% mutate(y_increment =
+                          case_when(min_coef > 0 ~ seq(0.15*max(results_long$Coefficient), by = 0.15*max(results_long$Coefficient) ,length.out = nrow(pairs)),
+                                    min_coef < 0 ~  seq(0.15*min(results_long$Coefficient), by = -0.15*min(results_long$Coefficient) ,length.out = nrow(pairs))),
+                           y = case_when( min_coef > 0 ~ max(results_long$Coefficient),
+                                          min_coef < 0 ~ min(results_long$Coefficient)),
+
+                           y = y + y_increment,
+                           x_label = (X_position.x + X_position.y)/2,
+                           y_label = y * 1.05,
+                           diff= round(Diff, accuracy),
+                           diff = case_when(diff > 1000 ~ scales::comma(diff),
+                                            TRUE ~ as.character(diff)),
+
+                           diff = case_when(Pval < 0.01 ~ paste(diff,  "***", sep = ""),
+                                            Pval < 0.05 ~ paste(diff,  "**", sep = ""),
+                                            Pval < 0.10 ~ paste(diff,  "*", sep = ""),
+                                            TRUE        ~ diff
+                           ))
 
 
 
-    p <- p + geom_text(data = results_long[results_long$Treatment != 0,],
-                       aes(x = X_position,
-                           y =  coef_buffer,
-                           label = blab),
-                       size = 10, family = font) +  geom_segment(pairs, mapping = aes(x = X_position.x,
+
+p <- p  +  geom_segment(pairs, mapping = aes(x = X_position.x,
                                                xend = X_position.y,
                                                y = y, yend = y), lineend = "round",
                           linejoin="bevel",
@@ -239,6 +266,8 @@ pairs$id  <- 1:nrow(pairs)
       geom_text(pairs,
                 size = 10, family= font,
                 mapping = aes(x = x_label, y = y_label, label = diff))
+
+    }
 
 
 

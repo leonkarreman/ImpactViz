@@ -6,7 +6,7 @@
 \usage{
 plot_impact_academic(
   dataset,
-  pair_data,
+  pair_data = NULL,
   accuracy = 2,
   font = "Lato",
   color = "blue",
@@ -17,10 +17,9 @@ plot_impact_academic(
   label_adjust = 0.5,
   label_size = 39,
   outcome_pct = F,
-  buffer_adj = 20,
+  buffer_adj = 1,
   buffer_diff_adj = 0,
   label_x_adj = 0,
-  y_expansion = c(0, 0.1),
   y_breaks = waiver()
 )
 }
