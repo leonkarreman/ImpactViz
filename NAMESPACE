@@ -3,6 +3,7 @@
 export(impact_regression)
 export(plot_impact)
 export(plot_impact_academic)
+export(plot_means)
 importFrom(fixest,feols)
 importFrom(ggplot2,geom_bar)
 importFrom(ggplot2,geom_errorbar)
