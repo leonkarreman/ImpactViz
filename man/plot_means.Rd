@@ -9,7 +9,7 @@ plot_means(
   font = "Lato",
   title = NULL,
   subtitle = NULL,
-  blabel_size = 15,
+  blabel_size = 20,
   label_adjust = 0,
   xlabs,
   colors = c("#e5daa5", "#90310b", "#90315a"),

@@ -33,66 +33,67 @@ plot_means <- function(data,
                        font = 'Lato',
                        title= NULL,
                        subtitle = NULL,
-                       blabel_size = 15,
+                       blabel_size = 20,
                        label_adjust = 0,
                        xlabs,
                        colors = c("#e5daa5", "#90310b", "#90315a"),
                        groupvar,
                        outcomevar
                        ){
-  
-  
-  
+
+
+
   data <- data %>% mutate(group  = unlist(data[, groupvar]),
                           outcome = unlist(data[, outcomevar] ))
-  
-  
+
+
   data$group <- factor(data$group)
-  
-  
-  results <- data %>% 
-    group_by(group) %>% 
-    summarise(mean = mean(outcome, na.rm = T)) %>% 
+
+
+  results <- data %>%
+    group_by(group) %>%
+    summarise(mean = mean(outcome, na.rm = T)) %>%
     filter(!is.na(group))
-  
-  
-  
+
+
+
   color_map <- setNames(colors, unique(results$group)) # Creates a named vector
-  
+
   # Example usage:
   # Assuming 'Type' is a factor, get colors for plotting
   plot_colors <- color_map[as.character(results$group)]
-  
-  
+
+
  p <-  ggplot(data =results, aes(y = mean, x = group, fill = group, color = group)) +
-    
+
     geom_bar(,
              alpha = 1,
              stat = "identity",
-             width = 0.8,
-             position = "identity") + 
-    
+             width = 0.5,
+             position = position_dodge(2)) +
+
     geom_text(
-      aes( label = sprintf("%.2f",round(mean, 2)) ), 
-      size = 10,
-      vjust = -0.5)  + 
-    
+      aes( label = sprintf("%.1f",round(mean, 1)) ),
+      size = 7,
+      vjust = -0.5)  +
+
     labs(subtitle = subtitle,
          title = title,
          x = NULL,
          y = "") +
-    
+
     scale_y_continuous(expand = expansion(mult = c(0,0.2)),
-                       position = "right") + 
-    
+                       position = "right") +
+
     scale_fill_manual(values = plot_colors) +
     scale_color_manual(values = plot_colors) +
-    
+
     scale_x_discrete(,
-                     labels = xlabs) +
-    
+                     labels = xlabs,
+                     expand = expansion(mult = c(0.3, 0.3))) +
+
     theme_economist_white(gray_bg = F, horizontal = T) +
-    
+
     theme(axis.text.x = element_text(family = font, size = blabel_size),
           axis.title.x = element_text(family = font, size = 39, hjust = 0),
           axis.title.y = element_text(family = font, size = 25),
@@ -106,15 +107,14 @@ plot_means <- function(data,
           axis.line.y.right = element_blank(),
           axis.line.x.bottom = element_line(),
           panel.grid.major.y = element_blank(),
-          
+
     )
  print(p)
- 
+
  return(p)
- 
+
    }
- 
- 
-  
-  
-  
+
+
+
+
