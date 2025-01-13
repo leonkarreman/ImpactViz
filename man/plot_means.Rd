@@ -46,3 +46,12 @@ A ggplot object representing the impact analysis results.
 \description{
 This function plots the results of an impact analysis using the ImpactViz package.
 }
+\examples{
+plot_results(dataset = your_dataset,
+             outcomes = c("outcome1", "outcome2"),
+             treatment_var = "your_treatment_var",
+             colors = c("grey", "blue"),
+             treatment_labs = c("Control", "Treatment"),
+             subtitle = "Your Subtitle",
+             legend_title = "Treatment Group")
+}
