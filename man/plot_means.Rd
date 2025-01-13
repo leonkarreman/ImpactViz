@@ -14,7 +14,10 @@ plot_means(
   xlabs,
   colors = c("#e5daa5", "#90310b", "#90315a"),
   groupvar,
-  outcomevar
+  outcomevar,
+  legendvar = NULL,
+  legendlabs = NULL,
+  horizontal = F
 )
 }
 \arguments{

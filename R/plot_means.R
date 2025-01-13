@@ -38,11 +38,14 @@ plot_means <- function(data,
                        xlabs,
                        colors = c("#e5daa5", "#90310b", "#90315a"),
                        groupvar,
-                       outcomevar
+                       outcomevar,
+                       legendvar = NULL,
+                       legendlabs = NULL,
+                       horizontal = F
                        ){
 
 
-
+  #----- Main data manipulation ----
   data <- data %>% mutate(group  = unlist(data[, groupvar]),
                           outcome = unlist(data[, outcomevar] ))
 
@@ -50,65 +53,170 @@ plot_means <- function(data,
   data$group <- factor(data$group)
 
 
-  results <- data %>%
-    group_by(group) %>%
-    summarise(mean = mean(outcome, na.rm = T)) %>%
-    filter(!is.na(group))
+  #----- legend not missing ----
+  if (!is.null(legendvar)) {
+
+    data <- data %>% mutate(legend = unlist(data[, legendvar] ))
+      data$legend <- factor(data$legend)
+
+      results <- data %>%
+        group_by(group, legend) %>%
+        summarise(mean = mean(outcome, na.rm = T)) %>%
+        filter(!is.na(group))
+
+      color_map <- setNames(colors, unique(results$legend)) # Creates a named vector
+
+
+      plot_colors <- color_map[as.character(results$legend)]
+
+
+   p <-   ggplot(data =results, aes(y = mean, x = group, fill = legend, color = legend)) +
+
+        geom_bar(,
+                 alpha = 1,
+                 stat = "identity",
+                 width = 0.5,
+                 position = position_dodge(0.7)) +
+
+        labs(subtitle = subtitle,
+             title = title,
+             x = NULL,
+             y = "",
+             color = NULL,
+             fill = NULL ) +
+
+        scale_y_continuous(expand = expansion(mult = c(0,0.2)),
+                           position = "right") +
+
+        scale_fill_manual(values = plot_colors, labels = legendlabs) +
+        scale_color_manual(values = plot_colors, labels = legendlabs) +
+
+        scale_x_discrete(,
+                         labels = xlabs,
+                         expand = expansion(mult = c(0.3, 0.3))) +
+
+        theme_economist_white(gray_bg = F, horizontal = T)
 
 
 
-  color_map <- setNames(colors, unique(results$group)) # Creates a named vector
 
-  # Example usage:
-  # Assuming 'Type' is a factor, get colors for plotting
-  plot_colors <- color_map[as.character(results$group)]
+  }
 
 
- p <-  ggplot(data =results, aes(y = mean, x = group, fill = group, color = group)) +
 
-    geom_bar(,
-             alpha = 1,
-             stat = "identity",
-             width = 0.5,
-             position = position_dodge(2)) +
+  #----- legend missing ----
 
-    geom_text(
+  if (is.null(legendvar)) {
+
+    results <- data %>%
+      group_by(group) %>%
+      summarise(mean = mean(outcome, na.rm = T)) %>%
+      filter(!is.na(group))
+
+    color_map <- setNames(colors, unique(results$group)) # Creates a named vector
+
+    plot_colors <- color_map[as.character(results$group)]
+
+    p <-  ggplot(data =results, aes(y = mean, x = group, fill = group, color = group)) +
+
+      geom_bar(,
+               alpha = 1,
+               stat = "identity",
+               width = 0.5,
+               position = position_dodge(1.5)) +
+
+
+
+      labs(subtitle = subtitle,
+           title = title,
+           x = NULL,
+           y = "") +
+
+      scale_y_continuous(expand = expansion(mult = c(0,0.2)),
+                         position = "right") +
+
+      scale_fill_manual(values = plot_colors) +
+      scale_color_manual(values = plot_colors) +
+
+      scale_x_discrete(,
+                       labels = xlabs,
+                       expand = expansion(mult = c(0.3, 0.3))) +
+
+      theme_economist_white(gray_bg = F, horizontal = T) +
+
+      theme(axis.text.x = element_text(family = font, size = blabel_size),
+            axis.title.x = element_text(family = font, size = 39, hjust = 0),
+            axis.title.y = element_text(family = font, size = 25),
+            plot.title = element_text(family = font, size = 25, lineheight = 0.2),
+            plot.subtitle = element_text(family = font, size = 22, hjust = 0),
+            legend.position = "none",
+            axis.text.y = element_blank(),
+            axis.line = element_blank(),
+            axis.ticks.x = element_blank(),
+            axis.ticks.y = element_blank(),
+            axis.line.y.right = element_blank(),
+            axis.line.x.bottom = element_line(),
+            panel.grid.major.y = element_blank(),
+
+      )
+
+  }
+
+
+
+
+  #----- horizontal ----
+
+  if (horizontal == T) {
+    p <- p +          geom_text(
       aes( label = sprintf("%.1f",round(mean, 1)) ),
       size = 7,
-      vjust = -0.5)  +
+      hjust = -0.5,
+      position =position_dodge(0.7))  +
 
-    labs(subtitle = subtitle,
-         title = title,
-         x = NULL,
-         y = "") +
+      theme(axis.text.y = element_text(family = font, size = blabel_size),
+                    axis.title.y = element_text(family = font, size = 39, hjust = 0),
+                    axis.title.x = element_text(family = font, size = 25),
+                    plot.title = element_text(family = font, size = 25, lineheight = 0.2),
+                    plot.subtitle = element_text(family = font, size = 22, hjust = 0),
+                    axis.text.x = element_blank(),
+                    axis.line = element_blank(),
+                    axis.ticks.x = element_blank(),
+                    axis.ticks.y = element_blank(),
+                    axis.line.x.bottom = element_blank(),
+                    axis.line.y.left  = element_line(),
+                    panel.grid.major.x = element_blank(),
+                    panel.grid.major.y = element_blank()) +
+     coord_flip()
+  }
 
-    scale_y_continuous(expand = expansion(mult = c(0,0.2)),
-                       position = "right") +
+  else {
 
-    scale_fill_manual(values = plot_colors) +
-    scale_color_manual(values = plot_colors) +
+    p <- p +         geom_text(
+      aes( label = sprintf("%.1f",round(mean, 1)) ),
+      size = 7,
+      vjust = -0.5,
+      position =position_dodge(0.7))  +
 
-    scale_x_discrete(,
-                     labels = xlabs,
-                     expand = expansion(mult = c(0.3, 0.3))) +
-
-    theme_economist_white(gray_bg = F, horizontal = T) +
-
-    theme(axis.text.x = element_text(family = font, size = blabel_size),
-          axis.title.x = element_text(family = font, size = 39, hjust = 0),
-          axis.title.y = element_text(family = font, size = 25),
-          plot.title = element_text(family = font, size = 25, lineheight = 0.2),
-          plot.subtitle = element_text(family = font, size = 22, hjust = 0),
-          legend.position = "none",
-          axis.text.y = element_blank(),
-          axis.line = element_blank(),
-          axis.ticks.x = element_blank(),
-          axis.ticks.y = element_blank(),
-          axis.line.y.right = element_blank(),
-          axis.line.x.bottom = element_line(),
-          panel.grid.major.y = element_blank(),
+      theme(axis.text.x = element_text(family = font, size = blabel_size),
+                    axis.title.x = element_text(family = font, size = 39, hjust = 0),
+                    axis.title.y = element_text(family = font, size = 25),
+                    plot.title = element_text(family = font, size = 25, lineheight = 0.2),
+                    plot.subtitle = element_text(family = font, size = 22, hjust = 0),
+                    legend.position = "none",
+                    axis.text.y = element_blank(),
+                    axis.line = element_blank(),
+                    axis.ticks.x = element_blank(),
+                    axis.ticks.y = element_blank(),
+                    axis.line.y.right = element_blank(),
+                    axis.line.x.bottom = element_line(),
+                    panel.grid.major.y = element_blank(),
 
     )
+
+  }
+
+
  print(p)
 
  return(p)
