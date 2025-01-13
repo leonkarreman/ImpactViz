@@ -93,7 +93,7 @@ plot_means <- function(data,
     
     theme_economist_white(gray_bg = F, horizontal = T) +
     
-    theme(axis.text.x = element_text(family = font, size = label_size),
+    theme(axis.text.x = element_text(family = font, size = blabel_size),
           axis.title.x = element_text(family = font, size = 39, hjust = 0),
           axis.title.y = element_text(family = font, size = 25),
           plot.title = element_text(family = font, size = 25, lineheight = 0.2),
