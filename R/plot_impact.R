@@ -26,31 +26,31 @@
 #'              legend_title = "Treatment Group")
 
 # Define the plotting function
-plot_impact <- function(  
-                         dataset, 
+plot_impact <- function(
+                         dataset,
                          outcomes,
-                         treatment_var, 
-                         fixed_effect_var = NULL, 
+                         treatment_var,
+                         fixed_effect_var = NULL,
                          cluster_var      = NULL,
                          control_vars    = NULL,
-                         level            = 5, 
+                         level            = 5,
                          accuracy        = NULL,
                          font = "Lato",
-                         colors         = NULL, 
-                         treatment_labs = NULL, 
-                         subtitle       = NULL, 
+                         colors         = NULL,
+                         treatment_labs = NULL,
+                         subtitle       = NULL,
                          legend_title   = NULL,
                          outcome_labs   = NULL,
                          outcome_pct  = F,
                          errorbars    = T,
-                         buffer_adj = 20, 
+                         buffer_adj = 20,
                          buffer_diff_adj = 0,
                          label_x_adj = 0,
                          y_expansion =  c(0, 0.1),
                          y_breaks = waiver()) {
-  
-  # create result data 
-  results_long <- impact_regression(dataset = dataset, 
+
+  # create result data
+  results_long <- impact_regression(dataset = dataset,
                                                outcomes =outcomes,
                                                 treatment_var = treatment_var,
                                                fixed_effect_var =fixed_effect_var,
@@ -60,33 +60,33 @@ plot_impact <- function(
                                         )
   xlabs <- NULL
   xbreaks <- NULL
-  
 
-  
-  if(outcome_pct  == F)  { 
-    
-    
+
+
+  if(outcome_pct  == F)  {
+
+
     ylabels <- scales::comma
     results_long$blab = scales::comma(results_long$Coefficient, accuracy = accuracy)
 
      } else {
-       
-       
-       results_long$Coefficient  = results_long$Coefficient * 100 
+
+
+       results_long$Coefficient  = results_long$Coefficient * 100
        results_long$UpperCI      = results_long$UpperCI * 100
        results_long$LowerCI      = results_long$LowerCI * 100
-       results_long$blab = sprintf("%.0f%%", results_long$Coefficient)
-       
+       results_long$blab = sprintf("%.1f%%", results_long$Coefficient)
+
        ylabels <- NULL
-  
-       
-     } 
-  
-  
+
+
+     }
+
+
 
   print(results_long)
-  
-  
+
+
   # Data manipulation
   results_long <- results_long %>%
 
@@ -98,27 +98,27 @@ plot_impact <- function(
            Outcome_Pos = (as.numeric(Outcome) - 1) * 3, # Adjust the multiplier for spacing between Outcomes
            X_position = 1 + Outcome_Pos + IntraOutcome_Pos) %>%
     ungroup()
-  
-  if(length(outcomes) > 1) { 
-    
+
+  if(length(outcomes) > 1) {
+
     xlabs <- outcome_labs
-    
+
     xbreaks <- as.numeric(unlist(results_long[results_long$Treatment == 0, "X_position"]))
-    
+
   }
-  
+
   unique_treatments <- sort(unique(results_long$Treatment))
-  
+
   # create label positions with buffer
   buffer = max(results_long$Coefficient)/buffer_adj
-  
-  results_long <- results_long %>% 
-    group_by(Outcome) %>% 
+
+  results_long <- results_long %>%
+    group_by(Outcome) %>%
     mutate(diff = Coefficient - Coefficient[Treatment == 0],
            pct_diff = diff/Coefficient * 100,
            max = max(pct_diff))
-  
-  results_long <- results_long %>% 
+
+  results_long <- results_long %>%
                   mutate(coef_buffer = case_when(Coefficient > 0 ~ Coefficient + buffer,
                                                  Coefficient < 0 ~ Coefficient - buffer),
                          ci_buffer = case_when(UpperCI > 0 ~ UpperCI + buffer,
@@ -128,59 +128,59 @@ plot_impact <- function(
                                                  TRUE           ~ coef_buffer))
 
 
-  
+
   # If the order of unique_treatments is not 0, 1, 2, match colors accordingly
   # For a dynamic approach, especially when treatment arms are not known in advance or are non-numeric:
   color_map <- setNames(colors, unique_treatments) # Creates a named vector
-  
+
   # Example usage:
   # Assuming 'Type' is a factor, get colors for plotting
   plot_colors <- color_map[as.character(results_long$Treatment)]
-  
+
   if (subtitle != "") {
   subtitle = paste(subtitle, "\n\n\n")
   }
-  
+
   # Plotting
   p <- ggplot(data = results_long) +
-    
 
-    geom_bar(aes(x = X_position, 
-                 y = Coefficient, 
-                 fill = Treatment), 
-                alpha = 1, 
-                stat = "identity", 
-                position = "identity", 
+
+    geom_bar(aes(x = X_position,
+                 y = Coefficient,
+                 fill = Treatment),
+                alpha = 1,
+                stat = "identity",
+                position = "identity",
                 width = 1) +
 
-    
-    geom_text(data = results_long[results_long$Treatment == 0,], 
-              aes(x = X_position + label_x_adj, 
-                  y = coef_buffer, 
-                  label = blab), 
+
+    geom_text(data = results_long[results_long$Treatment == 0,],
+              aes(x = X_position + label_x_adj,
+                  y = coef_buffer,
+                  label = blab),
               size = 10, family = font) +
-    
-   
+
+
     scale_x_continuous(breaks = xbreaks,
                        labels = xlabs) +
-    
+
     scale_y_continuous(expand = expansion(mult = y_expansion),
                        position = "right",
                        labels = ylabels,
                        breaks = y_breaks,
                        ) +
-    
-    scale_fill_manual(values = plot_colors, 
+
+    scale_fill_manual(values = plot_colors,
                       name = legend_title,
                       labels = treatment_labs) +
-    
-    labs(subtitle = subtitle, 
-         x = NULL, 
+
+    labs(subtitle = subtitle,
+         x = NULL,
          y = "") +
-    
-    
+
+
     theme_economist_white(gray_bg = FALSE, horizontal = TRUE) +
-    
+
     theme(axis.text.x = element_text(family = font, size = 39, hjust = 0.2),
           axis.title.x = element_text(family = font, size = 39, hjust = 0),
           axis.title.y = element_text(family = font, size = 25),
@@ -196,34 +196,34 @@ plot_impact <- function(
           axis.ticks.x = element_blank(),
           axis.line.y.right = element_blank(),
           axis.line.x.bottom = element_line())
-  
-      
+
+
   if (errorbars == T) {
-    
-    p <- p + geom_errorbar(aes(x = X_position, 
-                    ymin = LowerCI, 
-                    ymax = UpperCI), width = 0.4) +  geom_text( 
-                      aes(x = X_position, 
-                          y =  ci_buffer, 
-                          label = blab), 
-                      size = 10, family = font) 
-      
-    
+
+    p <- p + geom_errorbar(aes(x = X_position,
+                    ymin = LowerCI,
+                    ymax = UpperCI), width = 0.4) +  geom_text(
+                      aes(x = X_position,
+                          y =  ci_buffer,
+                          label = blab),
+                      size = 10, family = font)
+
+
   } else{
-    
+
     p <- p + geom_text(data = results_long[results_long$Treatment != 0,],
-      aes(x = X_position, 
-          y =  coef_buffer, 
-          label = blab), 
-      size = 10, family = font) 
+      aes(x = X_position,
+          y =  coef_buffer,
+          label = blab),
+      size = 10, family = font)
   }
-  
-      
-      
-  
-  
+
+
+
+
+
   return(p)
-  
+
 }
 
 # Example usage:
