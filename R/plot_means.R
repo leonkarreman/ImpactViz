@@ -95,7 +95,8 @@ plot_means <- function(data,
                          labels = xlabs,
                          expand = expansion(mult = c(0.3, 0.3))) +
 
-        theme_economist_white(gray_bg = F, horizontal = T)
+        theme_economist_white(gray_bg = F, horizontal = T) + theme(legend.position = "top", 
+                                                                   legend.justification = "left")
 
 
 
@@ -142,24 +143,7 @@ plot_means <- function(data,
                        labels = xlabs,
                        expand = expansion(mult = c(0.3, 0.3))) +
 
-      theme_economist_white(gray_bg = F, horizontal = T) +
-
-      theme(axis.text.x = element_text(family = font, size = blabel_size),
-            axis.title.x = element_text(family = font, size = 39, hjust = 0),
-            axis.title.y = element_text(family = font, size = 25),
-            plot.title = element_text(family = font, size = 25, lineheight = 0.2),
-            plot.subtitle = element_text(family = font, size = 22, hjust = 0),
-            legend.position = "none",
-            axis.text.y = element_blank(),
-            axis.line = element_blank(),
-            axis.ticks.x = element_blank(),
-            axis.ticks.y = element_blank(),
-            axis.line.y.right = element_blank(),
-            axis.line.x.bottom = element_line(),
-            panel.grid.major.y = element_blank(),
-
-      )
-
+      theme_economist_white(gray_bg = F, horizontal = T) + theme(legend.position = "none")
   }
 
 
@@ -171,13 +155,13 @@ plot_means <- function(data,
     p <- p +          geom_text(
       aes( label = sprintf("%.1f",round(mean, 1)) ),
       size = 7,
-      hjust = -0.5,
+      hjust = -0.25,
       position =position_dodge(0.7))  +
 
       theme(axis.text.y = element_text(family = font, size = blabel_size),
                     axis.title.y = element_text(family = font, size = 39, hjust = 0),
                     axis.title.x = element_text(family = font, size = 25),
-                    plot.title = element_text(family = font, size = 25, lineheight = 0.2),
+                    plot.title = element_text(family = font, size = 25, lineheight = 0.2, hjust = 0),
                     plot.subtitle = element_text(family = font, size = 22, hjust = 0),
                     axis.text.x = element_blank(),
                     axis.line = element_blank(),
@@ -186,7 +170,8 @@ plot_means <- function(data,
                     axis.line.x.bottom = element_blank(),
                     axis.line.y.left  = element_line(),
                     panel.grid.major.x = element_blank(),
-                    panel.grid.major.y = element_blank()) +
+                    panel.grid.major.y = element_blank(),
+            plot.title.position = "plot") +
      coord_flip()
   }
 
