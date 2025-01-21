@@ -76,7 +76,7 @@ plot_means <- function(data,
                  alpha = 1,
                  stat = "identity",
                  width = 0.5,
-                 position = position_dodge(0.7)) +
+                 position = position_dodge(0.8)) +
 
         labs(subtitle = subtitle,
              title = title,
@@ -143,7 +143,7 @@ plot_means <- function(data,
       aes( label = sprintf("%.1f",round(mean, 1)) ),
       size = 7,
       hjust = -0.25,
-      position =position_dodge(0.7))  +
+      position =position_dodge(0.8))  +
       scale_x_discrete(,
                        labels = rev(xlabs),
                        expand = expansion(mult = c(0.3, 0.3)),
@@ -178,7 +178,7 @@ plot_means <- function(data,
       aes( label = sprintf("%.1f",round(mean, 1)) ),
       size = 6.5,
       vjust = -0.5,
-      position =position_dodge(1.5))  +
+      position =position_dodge(0.8))  +
       scale_x_discrete(,
                        labels = xlabs) +
 
@@ -189,8 +189,8 @@ plot_means <- function(data,
                     axis.title.x = element_text(family = font, size = 39, hjust = 0),
                     axis.title.y = element_text(family = font, size = 25),
                     plot.title = element_text(family = font, size = 25, lineheight = 0.2),
-                    plot.subtitle = element_text(family = font, size = 22, hjust = 0,
-                                                 lineheight = 1.2),
+                    plot.subtitle = element_text(family = font, size = 20, hjust = 0,
+                                                 lineheight = 0.2),
                     axis.text.y = element_blank(),
                     axis.line = element_blank(),
                     axis.ticks.x = element_blank(),
