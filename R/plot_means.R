@@ -89,7 +89,7 @@ plot_means <- function(data,
                            position = "right") +
 
 
-        theme_economist_white(gray_bg = F, horizontal = T) + theme(legend.position = "top", 
+        theme_economist_white(gray_bg = F, horizontal = T) + theme(legend.position = "top",
                                                                    legend.justification = "left")
 
 
@@ -150,9 +150,9 @@ plot_means <- function(data,
                        limits = rev(levels(results$group))) +
       scale_fill_manual(breaks =  rev(levels(results$legend)), values = rev(plot_colors), labels = legendlabs) +
       scale_color_manual(guide = "none", breaks =  rev(levels(results$legend)), values = rev(plot_colors), labels = legendlabs) +
-  
-      
-      
+
+
+
 
       theme(axis.text.y = element_text(family = font, size = blabel_size),
                     axis.title.y = element_text(family = font, size = 39, hjust = 0),
@@ -179,9 +179,8 @@ plot_means <- function(data,
       vjust = -0.5,
       position =position_dodge(0.7))  +
       scale_x_discrete(,
-                       labels = xlabs,
-                       expand = expansion(mult = c(0.3, 0.3))) +
-      
+                       labels = xlabs) +
+
       scale_fill_manual(values = plot_colors, labels = legendlabs) +
       scale_color_manual(values = plot_colors, labels = legendlabs) +
 
