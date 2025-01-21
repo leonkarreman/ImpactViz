@@ -158,7 +158,8 @@ plot_means <- function(data,
                     axis.title.y = element_text(family = font, size = 39, hjust = 0),
                     axis.title.x = element_text(family = font, size = 25),
                     plot.title = element_text(family = font, size = 25, lineheight = 0.2, hjust = 0),
-                    plot.subtitle = element_text(family = font, size = 22, hjust = 0),
+                    plot.subtitle = element_text(family = font, size = 22, hjust = 0,
+                                                 lineheight = 1.2),
                     axis.text.x = element_blank(),
                     axis.line = element_blank(),
                     axis.ticks.x = element_blank(),
@@ -175,9 +176,9 @@ plot_means <- function(data,
 
     p <- p +         geom_text(
       aes( label = sprintf("%.1f",round(mean, 1)) ),
-      size = 7,
+      size = 6.5,
       vjust = -0.5,
-      position =position_dodge(0.7))  +
+      position =position_dodge(1.5))  +
       scale_x_discrete(,
                        labels = xlabs) +
 
@@ -188,7 +189,8 @@ plot_means <- function(data,
                     axis.title.x = element_text(family = font, size = 39, hjust = 0),
                     axis.title.y = element_text(family = font, size = 25),
                     plot.title = element_text(family = font, size = 25, lineheight = 0.2),
-                    plot.subtitle = element_text(family = font, size = 22, hjust = 0),
+                    plot.subtitle = element_text(family = font, size = 22, hjust = 0,
+                                                 lineheight = 1.2),
                     axis.text.y = element_blank(),
                     axis.line = element_blank(),
                     axis.ticks.x = element_blank(),
